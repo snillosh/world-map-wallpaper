@@ -1,5 +1,9 @@
 # Flight Map Wallpaper
 
+<p align="center">
+  <img src="screenshots/demo.gif" width="1200" alt="Flight Map Wallpaper Demo">
+</p>
+
 This project is a custom live wallpaper for KDE Plasma built with TypeScript and MapLibre.
 
 The idea started because I wanted something similar to Wallpaper Engine on Windows, but native to Linux. Rather than using a video or a pre-rendered animation, the wallpaper renders a live, interactive map in the background and animates flights between cities around the world.
