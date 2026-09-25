@@ -4,6 +4,7 @@ import { Config } from "./config/Config";
 import { DestinationPicker } from "./services/DestinationPicker";
 import { CityService } from "./services/CityService";
 import { FlightService } from "./services/FlightService";
+import { FlightPlanner } from "./services/FlightPlanner";
 import { MapService } from "./services/MapService";
 import { RouteLabel } from "./ui/RouteLabel";
 import { sleep } from "./utils/Time";
@@ -23,6 +24,7 @@ async function main(): Promise<void> {
         routeLabel.setLoading(cityService.count);
 
         const destinationPicker = new DestinationPicker(cityService.all);
+        const flightPlanner = new FlightPlanner();
         const flightService = new FlightService(mapService);
 
         let currentCity = destinationPicker.pickInitialCity();
@@ -45,7 +47,12 @@ async function main(): Promise<void> {
                 nextCity.country,
             );
 
-            await flightService.fly(currentCity, nextCity);
+            const flightPlan = flightPlanner.createPlan(currentCity, nextCity);
+
+            await flightService.fly(
+                flightPlan,
+                (phase) => routeLabel.setPhase(phase),
+            );
 
             currentCity = nextCity;
 
