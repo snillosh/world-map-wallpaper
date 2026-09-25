@@ -1,5 +1,5 @@
-import { Config } from "../config/Config";
 import type { City } from "../models/City";
+import { Config } from "../config/Config";
 
 export class CityService {
     private cities: City[] = [];
@@ -13,14 +13,10 @@ export class CityService {
             );
         }
 
-        const data = (await response.json()) as City[];
+        this.cities = (await response.json()) as City[];
 
-        this.cities = data.filter(
-            (city) => city.population >= Config.cities.minimumPopulation,
-        );
-
-        if (this.cities.length === 0) {
-            throw new Error("No cities matched the configured filters.");
+        if (this.cities.length < 2) {
+            throw new Error("The city dataset needs at least two cities.");
         }
     }
 

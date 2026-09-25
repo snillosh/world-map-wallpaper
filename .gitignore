@@ -36,6 +36,13 @@ Thumbs.db
 # Coverage
 coverage/
 
+# Local wallpaper host state
+wallpaper-settings.json
+wallpaper-settings.json.tmp
+
+# Manually downloaded GeoNames source (generated JSON remains tracked)
+cities500.txt
+
 # TypeScript
 *.tsbuildinfo
 

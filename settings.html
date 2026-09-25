@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Flight Map Wallpaper Settings</title>
+</head>
+
+<body>
+  <main class="settings-shell">
+    <header class="page-header">
+      <div class="eyebrow">Wallpaper controls</div>
+      <h1>Flight Map Wallpaper</h1>
+      <p>Changes are sent to the running wallpaper as soon as you make them.</p>
+    </header>
+
+    <section class="settings-card" aria-labelledby="behaviour-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="behaviour-heading">Behaviour</h2>
+          <p>Choose how the wallpaper moves through the world.</p>
+        </div>
+      </div>
+
+      <label class="field" for="behaviour-mode">
+        <span class="field-copy">
+          <strong>Mode</strong>
+          <small>Switches immediately without reloading the wallpaper.</small>
+        </span>
+        <select id="behaviour-mode">
+          <option value="flight">Flight</option>
+          <option value="orbit">Orbit</option>
+          <option value="explore">Explore</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="settings-card" aria-labelledby="appearance-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="appearance-heading">Appearance</h2>
+          <p>Choose the visual character of the map.</p>
+        </div>
+      </div>
+
+      <label class="field" for="map-style">
+        <span class="field-copy">
+          <strong>Map style</strong>
+          <small>The official night style is the default.</small>
+        </span>
+        <select id="map-style">
+          <option value="night-flight">Night — Official</option>
+          <option value="night-density">Night + Urban Density</option>
+          <option value="muted-orange">Muted Orange</option>
+          <option value="classic">Classic</option>
+        </select>
+      </label>
+    </section>
+
+    <section
+      class="settings-card has-popover"
+      aria-labelledby="destinations-heading"
+      data-destination-settings
+    >
+      <div class="section-heading">
+        <div>
+          <h2 id="destinations-heading">Destinations</h2>
+          <p>Choose which part of the world Flight and Explore can visit.</p>
+        </div>
+      </div>
+
+      <label class="field" for="destination-continent">
+        <span class="field-copy">
+          <strong>Continent</strong>
+          <small>Changes apply after the current journey or inspection.</small>
+        </span>
+        <select id="destination-continent">
+          <option value="">Worldwide</option>
+        </select>
+      </label>
+
+      <div class="field">
+        <label class="field-copy" for="destination-country-input">
+          <strong>Country</strong>
+          <small>Choose a country within the selected continent.</small>
+        </label>
+        <div id="destination-country"></div>
+      </div>
+    </section>
+
+    <section
+      class="settings-card"
+      aria-labelledby="flight-heading"
+      data-mode-settings="flight"
+    >
+      <div class="section-heading">
+        <div>
+          <h2 id="flight-heading">Flight</h2>
+          <p>Control the pace and destination pool.</p>
+        </div>
+      </div>
+
+      <label class="slider-field" for="flight-speed">
+        <span class="field-copy">
+          <strong>Flight speed</strong>
+          <small>Adjusts the current flight as well as future flights.</small>
+        </span>
+        <output id="flight-speed-value" for="flight-speed">1.00×</output>
+        <input id="flight-speed" type="range" min="0.1" max="2" step="0.05" />
+        <span class="range-labels"><span>Slower</span><span>Faster</span></span>
+      </label>
+
+      <label class="slider-field" for="minimum-population">
+        <span class="field-copy">
+          <strong>Minimum city population</strong>
+          <small>Applies when the next destination is chosen.</small>
+        </span>
+        <output id="minimum-population-value" for="minimum-population">250,000</output>
+        <input
+          id="minimum-population"
+          type="range"
+          min="0"
+          max="5000000"
+          step="5000"
+        />
+        <span class="range-labels"><span>More cities</span><span>Larger cities</span></span>
+      </label>
+
+      <label class="field" for="show-route-label">
+        <span class="field-copy">
+          <strong>Route label</strong>
+          <small>Show cities and the current flight phase.</small>
+        </span>
+        <span class="switch">
+          <input id="show-route-label" type="checkbox" />
+          <span class="switch-track" aria-hidden="true"></span>
+        </span>
+      </label>
+    </section>
+
+    <section
+      class="settings-card"
+      aria-labelledby="explore-heading"
+      data-mode-settings="explore"
+      hidden
+    >
+      <div class="section-heading">
+        <div>
+          <h2 id="explore-heading">Explore</h2>
+          <p>Set the rhythm of each calm, satellite-like inspection.</p>
+        </div>
+      </div>
+
+      <label class="slider-field" for="explore-zoomed-out">
+        <span class="field-copy">
+          <strong>Zoomed out level</strong>
+          <small>The fixed camera height used while moving between places.</small>
+        </span>
+        <output id="explore-zoomed-out-value" for="explore-zoomed-out">3.0</output>
+        <input id="explore-zoomed-out" type="range" min="1.5" max="8" step="0.1" />
+        <span class="range-labels"><span>Higher</span><span>Closer</span></span>
+      </label>
+
+      <label class="slider-field" for="explore-zoomed-in">
+        <span class="field-copy">
+          <strong>Zoomed in level</strong>
+          <small>How closely Explore inspects each destination.</small>
+        </span>
+        <output id="explore-zoomed-in-value" for="explore-zoomed-in">8.0</output>
+        <input id="explore-zoomed-in" type="range" min="6" max="16" step="0.1" />
+        <span class="range-labels"><span>Wider</span><span>Closer</span></span>
+      </label>
+
+      <label class="slider-field" for="explore-zoom-in-duration">
+        <span class="field-copy">
+          <strong>Zoom in duration</strong>
+          <small>Time spent approaching a destination.</small>
+        </span>
+        <output id="explore-zoom-in-duration-value" for="explore-zoom-in-duration">8 sec</output>
+        <input id="explore-zoom-in-duration" type="range" min="1" max="30" step="1" />
+        <span class="range-labels"><span>Quicker</span><span>Slower</span></span>
+      </label>
+
+      <label class="slider-field" for="explore-view-duration">
+        <span class="field-copy">
+          <strong>View duration</strong>
+          <small>Pause at the destination before leaving.</small>
+        </span>
+        <output id="explore-view-duration-value" for="explore-view-duration">4 sec</output>
+        <input id="explore-view-duration" type="range" min="0" max="30" step="1" />
+        <span class="range-labels"><span>Shorter</span><span>Longer</span></span>
+      </label>
+
+      <label class="slider-field" for="explore-zoom-out-duration">
+        <span class="field-copy">
+          <strong>Zoom out duration</strong>
+          <small>Time spent returning to the moving height.</small>
+        </span>
+        <output id="explore-zoom-out-duration-value" for="explore-zoom-out-duration">6 sec</output>
+        <input id="explore-zoom-out-duration" type="range" min="1" max="30" step="1" />
+        <span class="range-labels"><span>Quicker</span><span>Slower</span></span>
+      </label>
+    </section>
+
+    <section
+      class="settings-card"
+      aria-labelledby="orbit-heading"
+      data-mode-settings="orbit"
+      hidden
+    >
+      <div class="section-heading">
+        <div>
+          <h2 id="orbit-heading">Orbit</h2>
+          <p>Set a calm, continuous path around the world.</p>
+        </div>
+      </div>
+
+      <label class="slider-field" for="orbit-speed">
+        <span class="field-copy">
+          <strong>Orbit speed</strong>
+          <small>Degrees of longitude travelled each minute.</small>
+        </span>
+        <output id="orbit-speed-value" for="orbit-speed">2.0°/min</output>
+        <input id="orbit-speed" type="range" min="0.5" max="10" step="0.5" />
+        <span class="range-labels"><span>Slower</span><span>Faster</span></span>
+      </label>
+
+      <label class="field" for="orbit-direction">
+        <span class="field-copy">
+          <strong>Direction</strong>
+          <small>Choose which way the camera travels.</small>
+        </span>
+        <select id="orbit-direction">
+          <option value="east">East</option>
+          <option value="west">West</option>
+        </select>
+      </label>
+
+      <label class="field" for="orbit-starting-longitude">
+        <span class="field-copy">
+          <strong>Starting longitude</strong>
+          <small>Used whenever a new Orbit session begins.</small>
+        </span>
+        <span class="number-input">
+          <input
+            id="orbit-starting-longitude"
+            type="number"
+            min="-180"
+            max="180"
+            step="5"
+          />
+          <span>°</span>
+        </span>
+      </label>
+
+      <label class="slider-field" for="orbit-latitude">
+        <span class="field-copy">
+          <strong>Latitude</strong>
+          <small>Moves smoothly when changed during an orbit.</small>
+        </span>
+        <output id="orbit-latitude-value" for="orbit-latitude">20° N</output>
+        <input id="orbit-latitude" type="range" min="-55" max="55" step="1" />
+        <span class="range-labels"><span>South</span><span>North</span></span>
+      </label>
+
+      <label class="slider-field" for="orbit-zoom">
+        <span class="field-copy">
+          <strong>Camera distance</strong>
+          <small>Moves smoothly between global and closer views.</small>
+        </span>
+        <output id="orbit-zoom-value" for="orbit-zoom">3.6</output>
+        <input id="orbit-zoom" type="range" min="2" max="6" step="0.1" />
+        <span class="range-labels"><span>Farther</span><span>Closer</span></span>
+      </label>
+    </section>
+
+    <section class="settings-card" aria-labelledby="performance-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="performance-heading">Performance</h2>
+          <p>Limit map redraws while preserving smooth timing.</p>
+        </div>
+      </div>
+
+      <label class="field" for="target-fps">
+        <span class="field-copy">
+          <strong>Target FPS</strong>
+          <small>30 FPS is a good balance for a desktop background.</small>
+        </span>
+        <select id="target-fps">
+          <option value="15">15 FPS</option>
+          <option value="30">30 FPS</option>
+          <option value="60">60 FPS</option>
+        </select>
+      </label>
+    </section>
+
+    <footer class="connection-panel">
+      <span id="connection-dot" class="connection-dot" aria-hidden="true"></span>
+      <div>
+        <strong id="connection-state" aria-live="polite">Connecting…</strong>
+        <span id="connection-detail">Looking for the local wallpaper host</span>
+      </div>
+    </footer>
+  </main>
+
+  <script type="module" src="/src/settings/main.ts"></script>
+</body>
+</html>

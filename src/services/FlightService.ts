@@ -17,6 +17,8 @@ type PhaseChangeHandler = (phase: FlightPhaseKind) => void;
 
 export class FlightService {
     private readonly mapService: MapService;
+    private speedMultiplier = 1;
+    private targetFps = 30;
 
     constructor(mapService: MapService) {
         this.mapService = mapService;
@@ -25,13 +27,56 @@ export class FlightService {
     public fly(
         plan: FlightPlan,
         onPhaseChange?: PhaseChangeHandler,
+        signal?: AbortSignal,
     ): Promise<void> {
-        const startTime = performance.now();
+        let previousFrameTime = performance.now();
+        let previousRenderTime = Number.NEGATIVE_INFINITY;
+        let elapsedMs = 0;
         let activePhase: FlightPhaseKind | undefined;
 
         return new Promise((resolve) => {
+            let animationFrame = 0;
+            let finished = false;
+
+            const finish = (): void => {
+                if (finished) {
+                    return;
+                }
+                finished = true;
+                cancelAnimationFrame(animationFrame);
+                signal?.removeEventListener("abort", finish);
+                resolve();
+            };
+
+            if (signal?.aborted) {
+                finish();
+                return;
+            }
+
+            signal?.addEventListener("abort", finish, { once: true });
+
             const frame = (now: number): void => {
-                const state = this.getState(plan, now - startTime);
+                if (signal?.aborted) {
+                    finish();
+                    return;
+                }
+
+                const wallTimeDeltaMs = Math.min(now - previousFrameTime, 100);
+                previousFrameTime = now;
+                elapsedMs += wallTimeDeltaMs * this.speedMultiplier;
+
+                const state = this.getState(plan, elapsedMs);
+                const minimumFrameTimeMs = 1000 / this.targetFps;
+                const shouldRender =
+                    state.completed ||
+                    now - previousRenderTime >= minimumFrameTimeMs;
+
+                if (!shouldRender) {
+                    animationFrame = requestAnimationFrame(frame);
+                    return;
+                }
+
+                previousRenderTime = now;
 
                 if (state.phase !== activePhase) {
                     activePhase = state.phase;
@@ -59,14 +104,22 @@ export class FlightService {
                 this.mapService.setCamera(longitude, latitude, zoom);
 
                 if (state.completed) {
-                    resolve();
+                    finish();
                 } else {
-                    requestAnimationFrame(frame);
+                    animationFrame = requestAnimationFrame(frame);
                 }
             };
 
-            requestAnimationFrame(frame);
+            animationFrame = requestAnimationFrame(frame);
         });
+    }
+
+    public setSpeedMultiplier(speedMultiplier: number): void {
+        this.speedMultiplier = speedMultiplier;
+    }
+
+    public setTargetFps(targetFps: number): void {
+        this.targetFps = targetFps;
     }
 
     private getState(plan: FlightPlan, elapsedMs: number): FlightState {

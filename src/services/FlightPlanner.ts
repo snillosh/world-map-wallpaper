@@ -5,7 +5,7 @@ import type {
     FlightPhaseKind,
     FlightPlan,
 } from "../models/Flight";
-import { distanceBetweenCities } from "../utils/Math";
+import { distanceKm } from "../utils/Geo";
 
 interface PhaseDefinition {
     readonly kind: FlightPhaseKind;
@@ -58,7 +58,7 @@ const fullTransitionDistanceKm = transitionPhases.reduce(
 
 export class FlightPlanner {
     public createPlan(from: City, to: City): FlightPlan {
-        const totalDistanceKm = distanceBetweenCities(from, to);
+        const totalDistanceKm = distanceKm(from, to);
 
         if (totalDistanceKm <= 0) {
             throw new Error("A flight needs two different locations.");

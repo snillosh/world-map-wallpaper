@@ -27,6 +27,12 @@ body,
   letter-spacing: 0.3px;
 
   backdrop-filter: blur(8px);
+  transition: opacity 160ms ease;
+}
+
+#route-label.is-hidden {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .maplibregl-ctrl-bottom-left,

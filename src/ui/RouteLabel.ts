@@ -43,6 +43,10 @@ export class RouteLabel {
         this.element.textContent = text;
     }
 
+    public setVisible(visible: boolean): void {
+        this.element.classList.toggle("is-hidden", !visible);
+    }
+
     private render(): void {
         this.element.textContent = this.phase
             ? `${this.route} · ${this.phase}`

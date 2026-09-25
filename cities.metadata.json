@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-09-25T21:13:39.219Z",
+  "source": "GeoNames",
+  "sourceDataset": "cities500",
+  "sourceUrl": "https://download.geonames.org/export/dump/",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "sourceRecordCount": 235878,
+  "validPopulatedPlaceCount": 235878,
+  "usefulCandidateCount": 74317,
+  "selectedCityCount": 23123,
+  "countryCount": 245,
+  "maximumPerCountry": 250
+}

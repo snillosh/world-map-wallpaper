@@ -1,119 +1,230 @@
 import type { City } from "../models/City";
+import { distanceKm } from "../utils/Geo";
+
+export type RandomSource = () => number;
+
+export interface DestinationPickerOptions {
+    readonly random?: RandomSource;
+    readonly recentCityLimit?: number;
+    readonly recentCountryLimit?: number;
+}
+
+type DistanceBand = "short" | "medium" | "long";
+
+interface Candidate {
+    readonly city: City;
+    readonly distanceKm: number;
+    readonly band: DistanceBand;
+}
+
+const distanceBandChances: readonly [DistanceBand, number][] = [
+    ["short", 0.45],
+    ["medium", 0.35],
+    ["long", 0.20],
+];
+const maximumShortDistanceKm = 1_500;
+const maximumMediumDistanceKm = 5_000;
+const smallAreaShortFraction = 0.3;
+const smallAreaMediumFraction = 0.7;
 
 export class DestinationPicker {
     private readonly cities: readonly City[];
-    private readonly recentLimit: number;
+    private readonly random: RandomSource;
+    private readonly recentCityLimit: number;
+    private readonly recentCountryLimit: number;
 
-    private recentCities: City[] = [];
+    private recentCityIds: number[] = [];
+    private recentCountryCodes: string[] = [];
+    private readonly visitCounts = new Map<number, number>();
 
     constructor(
         cities: readonly City[],
-        recentLimit = 10,
+        options: DestinationPickerOptions = {},
     ) {
+        if (cities.length < 2) {
+            throw new Error("DestinationPicker needs at least two eligible cities.");
+        }
+
         this.cities = cities;
-        this.recentLimit = recentLimit;
+        this.random = options.random ?? Math.random;
+        this.recentCityLimit = Math.max(0, options.recentCityLimit ?? 16);
+        this.recentCountryLimit = Math.max(0, options.recentCountryLimit ?? 4);
     }
 
     public pickInitialCity(): City {
-        const city = this.randomCity();
+        const maximumPopulation = this.maximumPopulation(this.cities);
+        const city = this.weightedRandom(
+            this.cities,
+            (candidate) => this.cityWeight(candidate, maximumPopulation),
+        );
         this.remember(city);
         return city;
     }
 
     public pickNextCity(currentCity: City): City {
-        const candidates = this.cities.filter((city) => {
-            return city !== currentCity && !this.recentCities.includes(city);
-        });
+        const nonCurrentCities = this.cities.filter(
+            (city) => city.id !== currentCity.id,
+        );
+        const freshCities = nonCurrentCities.filter(
+            (city) => !this.recentCityIds.includes(city.id),
+        );
+        const availableCities = freshCities.length > 0
+            ? freshCities
+            : nonCurrentCities;
 
-        const pool = candidates.length > 0 ? candidates : this.cities;
-
-        const nextCity = this.weightedRandom(pool, currentCity);
+        const candidates = this.classifyByDistance(currentCity, availableCities);
+        const requestedBand = this.pickDistanceBand();
+        const bandPool = this.getBandPool(candidates, requestedBand);
+        const maximumPopulation = this.maximumPopulation(availableCities);
+        const nextCity = this.weightedRandom(
+            bandPool,
+            (candidate) => this.destinationWeight(candidate, maximumPopulation),
+        ).city;
 
         this.remember(nextCity);
-
         return nextCity;
     }
 
-    private weightedRandom(cities: readonly City[], currentCity: City): City {
-        const weightedCities = cities.map((city) => {
-            return {
-                city,
-                weight: this.getWeight(city, currentCity),
-            };
-        });
-
-        const totalWeight = weightedCities.reduce(
-            (sum, item) => sum + item.weight,
-            0,
+    private classifyByDistance(
+        currentCity: City,
+        cities: readonly City[],
+    ): Candidate[] {
+        const distances = cities.map((city) => ({
+            city,
+            distanceKm: distanceKm(currentCity, city),
+        }));
+        const maximumDistance = Math.max(
+            ...distances.map((candidate) => candidate.distanceKm),
         );
 
-        let target = Math.random() * totalWeight;
+        // Absolute bands work for worldwide routes. Scaling them down to the
+        // current pool also gives a country-only journey meaningful variety.
+        const shortBoundary = Math.min(
+            maximumShortDistanceKm,
+            maximumDistance * smallAreaShortFraction,
+        );
+        const mediumBoundary = Math.min(
+            maximumMediumDistanceKm,
+            maximumDistance * smallAreaMediumFraction,
+        );
 
-        for (const item of weightedCities) {
-            target -= item.weight;
+        return distances.map((candidate) => ({
+            ...candidate,
+            band: candidate.distanceKm <= shortBoundary
+                ? "short"
+                : candidate.distanceKm <= mediumBoundary
+                    ? "medium"
+                    : "long",
+        }));
+    }
 
-            if (target <= 0) {
-                return item.city;
+    private pickDistanceBand(): DistanceBand {
+        let target = this.random();
+
+        for (const [band, chance] of distanceBandChances) {
+            target -= chance;
+            if (target < 0) {
+                return band;
             }
         }
 
-        return weightedCities[weightedCities.length - 1].city;
+        return "long";
     }
 
-    private getWeight(city: City, currentCity: City): number {
-        const populationWeight = Math.sqrt(city.population);
+    private getBandPool(
+        candidates: readonly Candidate[],
+        requestedBand: DistanceBand,
+    ): readonly Candidate[] {
+        const fallbackOrder: Readonly<Record<DistanceBand, readonly DistanceBand[]>> = {
+            short: ["short", "medium", "long"],
+            medium: ["medium", "short", "long"],
+            long: ["long", "medium", "short"],
+        };
 
-        const distance = this.distanceKm(currentCity, city);
+        for (const band of fallbackOrder[requestedBand]) {
+            const matching = candidates.filter((candidate) => candidate.band === band);
+            if (matching.length > 0) {
+                return matching;
+            }
+        }
 
-        const distanceWeight =
-            distance < 500
-                ? 0.4
-                : distance < 2_000
-                    ? 1.5
-                    : distance < 6_000
-                        ? 1.0
-                        : 0.35;
-
-        const sameCountryPenalty = city.iso2 === currentCity.iso2 ? 0.4 : 1.0;
-
-        const capitalBonus =
-            city.capital === "primary" ? 1.6 :
-                city.capital === "admin" ? 1.2 :
-                    1.0;
-
-        return populationWeight * distanceWeight * sameCountryPenalty * capitalBonus;
+        throw new Error("No destination is available outside the current city.");
     }
 
-    private distanceKm(a: City, b: City): number {
-        const earthRadiusKm = 6371;
+    private destinationWeight(
+        candidate: Candidate,
+        maximumPopulation: number,
+    ): number {
+        const { city, distanceKm: journeyDistanceKm } = candidate;
+        const recentCountryPenalty = this.recentCountryCodes.includes(city.iso2)
+            ? 0.55
+            : 1;
+        const visits = this.visitCounts.get(city.id) ?? 0;
+        const noveltyWeight = 1 / Math.sqrt(1 + visits);
+        const adjacentPlacePenalty = journeyDistanceKm < 50
+            ? 0.08
+            : journeyDistanceKm < 150
+                ? 0.45
+                : 1;
 
-        const lat1 = this.toRadians(a.lat);
-        const lat2 = this.toRadians(b.lat);
-        const deltaLat = this.toRadians(b.lat - a.lat);
-        const deltaLng = this.toRadians(b.lng - a.lng);
-
-        const h =
-            Math.sin(deltaLat / 2) ** 2 +
-            Math.cos(lat1) *
-            Math.cos(lat2) *
-            Math.sin(deltaLng / 2) ** 2;
-
-        return 2 * earthRadiusKm * Math.asin(Math.sqrt(h));
+        return this.cityWeight(city, maximumPopulation) *
+            recentCountryPenalty *
+            noveltyWeight *
+            adjacentPlacePenalty;
     }
 
-    private toRadians(degrees: number): number {
-        return degrees * Math.PI / 180;
+    private cityWeight(city: City, maximumPopulation: number): number {
+        const relativePopulation = city.population / maximumPopulation;
+        const populationWeight = 0.2 + Math.pow(relativePopulation, 0.35) * 0.8;
+        const importanceBonus = city.capital === "primary"
+            ? 1.5
+            : city.capital === "admin"
+                ? 1.25
+                : city.capital === "minor"
+                    ? 1.1
+                    : 1;
+
+        return populationWeight * importanceBonus;
     }
 
-    private randomCity(): City {
-        return this.cities[Math.floor(Math.random() * this.cities.length)];
+    private maximumPopulation(cities: readonly City[]): number {
+        return Math.max(...cities.map((city) => city.population), 1);
+    }
+
+    private weightedRandom<T>(
+        items: readonly T[],
+        getWeight: (item: T) => number,
+    ): T {
+        const weightedItems = items.map((item) => ({
+            item,
+            weight: getWeight(item),
+        }));
+        const totalWeight = weightedItems.reduce(
+            (sum, item) => sum + item.weight,
+            0,
+        );
+        let target = this.random() * totalWeight;
+
+        for (const item of weightedItems) {
+            target -= item.weight;
+            if (target <= 0) {
+                return item.item;
+            }
+        }
+
+        return weightedItems[weightedItems.length - 1].item;
     }
 
     private remember(city: City): void {
-        this.recentCities.push(city);
+        this.visitCounts.set(city.id, (this.visitCounts.get(city.id) ?? 0) + 1);
+        this.recentCityIds.push(city.id);
+        this.recentCountryCodes.push(city.iso2);
 
-        if (this.recentCities.length > this.recentLimit) {
-            this.recentCities.shift();
+        if (this.recentCityIds.length > this.recentCityLimit) {
+            this.recentCityIds.shift();
+        }
+        if (this.recentCountryCodes.length > this.recentCountryLimit) {
+            this.recentCountryCodes.shift();
         }
     }
 }
