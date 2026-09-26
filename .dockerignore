@@ -1,0 +1,16 @@
+.git
+.idea
+.vscode
+.env
+.env.*
+!.env.example
+node_modules
+dist
+dist-server
+coverage
+screenshots
+cities500.txt
+wallpaper-settings.json
+wallpaper-settings.json.tmp
+*.log
+*.tsbuildinfo

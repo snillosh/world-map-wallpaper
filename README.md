@@ -33,7 +33,7 @@ Satellite Dark, Satellite Hybrid Light, and Satellite Hybrid Dark are also
 available when a MapTiler key is configured. Each mode retains its own settings
 when you switch between them.
 
-## MapTiler satellite styles
+## MapTiler map styles
 
 Create a browser API key in your
 [MapTiler Cloud account](https://cloud.maptiler.com/account/keys/), copy
@@ -43,11 +43,40 @@ Create a browser API key in your
 VITE_MAPTILER_API_KEY=your-browser-key
 ```
 
-Restart the development server after changing `.env`. Vite intentionally sends
-`VITE_` values to the browser, which is expected for a browser map key; restrict
-the key to the wallpaper's production URL and local development origins in
-MapTiler Cloud. The local `.env` file is ignored by Git and must not be
-committed.
+Restart the development server after changing `.env`. All map themes use
+MapTiler-hosted map data; the four custom themes replace the sample key in their
+source JSON as they are bundled, while the satellite themes load their provider
+styles using the same configured key. Vite intentionally sends `VITE_` values
+to the browser, which is expected for a browser map key; restrict the key to the
+wallpaper's production URL and local development origins in MapTiler Cloud. The
+local `.env` file is ignored by Git and must not be committed.
+
+## Docker deployment
+
+The production image serves the built wallpaper and settings host together on
+port `8080`. Its `/data` volume holds `wallpaper-settings.json`, so settings
+survive container replacement. Production wallpaper clients use a same-origin
+read-only WebSocket at `/settings`; the control panel uses the writable
+`/settings-admin` route.
+
+Sign in to Docker Hub, then publish the image from PowerShell:
+
+```powershell
+cd Scripts
+pwsh ./Publish-DockerImage.ps1
+```
+
+The script reads `VITE_MAPTILER_API_KEY` from the ignored root `.env`, passes it
+to Docker as a BuildKit secret, builds
+`snillosh/world-map-wallpaper:latest`, and pushes the image. The browser key is
+necessarily present in the final JavaScript bundle, so its MapTiler HTTP-origin
+restrictions remain the real access control.
+
+Server deployment is deliberately separate. The ServerConfiguration repository
+pulls the published image through its existing deployment script, exposes the
+viewer at `https://wallpaper.bsalter.online`, and keeps the writable control
+panel at `http://wallpaper-settings.home/settings.html` on the LAN/VPN only.
+The public Caddy route blocks both the control-panel page and writable WebSocket.
 
 The four satellite styles use MapTiler's current Satellite v4 and Hybrid v4
 light/dark treatments, then replace their navigation overlays with a small

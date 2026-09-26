@@ -1,4 +1,4 @@
-import type { Continent } from "./City";
+import type { Continent } from "./City.js";
 
 export interface Country {
     readonly iso2: string;

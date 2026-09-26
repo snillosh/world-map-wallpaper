@@ -10,8 +10,10 @@
     "host": "tsx host/server.ts",
     "generate-city-data": "tsx scripts/generate-city-data.ts",
     "build": "tsc && tsc -p tsconfig.host.json && tsc -p tsconfig.scripts.json && vite build",
+    "build:server": "tsc -p tsconfig.server.json",
     "test": "tsx --test tests/*.test.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node dist-server/host/server.js"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
@@ -22,7 +24,7 @@
     "vite": "^8.1.0"
   },
   "dependencies": {
-    "maplibre-gl": "^5.24.0",
+    "maplibre-gl": "^6.11.2",
     "ws": "^8.21.3"
   }
 }

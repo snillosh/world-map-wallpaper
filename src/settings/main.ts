@@ -56,7 +56,7 @@ for (const continent of destinationContinents) {
 }
 
 const client = new SettingsClient({
-    url: Config.settings.webSocketUrl,
+    url: Config.settings.controlPanelWebSocketUrl,
     role: "settings",
     onSettings: renderSettings,
     onConnectionChange: renderConnection,

@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.host.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "outDir": "dist-server",
+    "rootDir": "."
+  },
+  "include": [
+    "host/server.ts",
+    "src/models/City.ts",
+    "src/models/Country.ts",
+    "src/models/SettingsProtocol.ts",
+    "src/models/WallpaperSettings.ts"
+  ]
+}

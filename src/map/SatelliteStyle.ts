@@ -64,7 +64,7 @@ const definitions: Readonly<Record<
 export class MapTilerConfigurationError extends Error {
     constructor() {
         super(
-            "Satellite styles need a MapTiler API key. Add " +
+            "Map styles need a MapTiler API key. Add " +
             "VITE_MAPTILER_API_KEY to a local .env file, then restart the wallpaper.",
         );
         this.name = "MapTilerConfigurationError";
@@ -392,7 +392,7 @@ export function createSatelliteOverlayLayers(
     return layers;
 }
 
-function requireStyleSpecification(value: unknown): StyleSpecification {
+export function requireStyleSpecification(value: unknown): StyleSpecification {
     if (
         typeof value !== "object" ||
         value === null ||
@@ -404,7 +404,7 @@ function requireStyleSpecification(value: unknown): StyleSpecification {
         !("layers" in value) ||
         !Array.isArray(value.layers)
     ) {
-        throw new Error("MapTiler returned an invalid map style.");
+        throw new Error("Invalid map style data.");
     }
 
     return value as StyleSpecification;

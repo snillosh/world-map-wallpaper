@@ -1,20 +1,5 @@
 export const Config = {
     map: {
-        styleUrls: {
-            "night-flight": new URL(
-                "../../custom-map-night.json",
-                import.meta.url,
-            ).href,
-            "night-density": new URL(
-                "../../custom-map-night-density-experiment.json",
-                import.meta.url,
-            ).href,
-            "muted-orange": new URL(
-                "../../custom-map-orange.json",
-                import.meta.url,
-            ).href,
-            classic: new URL("../../custom-map.json", import.meta.url).href,
-        },
         initialCenter: [0, 20] as [number, number],
         initialZoom: 2.2,
         interactive: false,
@@ -37,6 +22,16 @@ export const Config = {
     },
 
     settings: {
-        webSocketUrl: "ws://127.0.0.1:47631",
+        wallpaperWebSocketUrl: getSettingsWebSocketUrl("settings"),
+        controlPanelWebSocketUrl: getSettingsWebSocketUrl("settings-admin"),
     },
 } as const;
+
+function getSettingsWebSocketUrl(productionPath: string): string {
+    if (import.meta.env?.DEV) {
+        return "ws://127.0.0.1:47631";
+    }
+
+    const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${globalThis.location.host}/${productionPath}`;
+}

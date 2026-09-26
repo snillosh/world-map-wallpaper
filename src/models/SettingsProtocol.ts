@@ -1,11 +1,11 @@
 import type {
     WallpaperSettings,
     WallpaperSettingsPatch,
-} from "./WallpaperSettings";
+} from "./WallpaperSettings.js";
 import {
     validateSettings,
     validateSettingsPatch,
-} from "./WallpaperSettings";
+} from "./WallpaperSettings.js";
 
 export type SettingsClientRole = "wallpaper" | "settings";
 

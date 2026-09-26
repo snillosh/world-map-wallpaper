@@ -1,6 +1,8 @@
-import maplibregl from "maplibre-gl";
+import { Map as MapLibreMap, setWorkerUrl } from "maplibre-gl";
+import mapLibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
 import { Config } from "../config/Config";
+import { buildLocalStyle } from "../map/LocalStyle";
 import {
     getConfiguredMapTilerApiKey,
     isSatelliteMapStyle,
@@ -8,8 +10,13 @@ import {
 } from "../map/SatelliteStyle";
 import type { MapStyle } from "../models/WallpaperSettings";
 
+// MapLibre 6 ships its renderer as a separate ES-module worker. Vite must
+// bundle it explicitly; otherwise a production build looks for an unbundled
+// sibling file and the map remains on its grey loading screen.
+setWorkerUrl(mapLibreWorkerUrl);
+
 export class MapService {
-    private readonly map: maplibregl.Map;
+    private readonly map: MapLibreMap;
     private mapStyle: MapStyle;
     private requestedStyle: MapStyle;
     private styleRequest = 0;
@@ -25,9 +32,12 @@ export class MapService {
         this.mapStyle = initialStyle;
         this.requestedStyle = initialStyle;
         this.onError = onError;
-        this.map = new maplibregl.Map({
+        this.map = new MapLibreMap({
             container: "map",
-            style: Config.map.styleUrls[initialStyle],
+            style: buildLocalStyle(
+                initialStyle,
+                getConfiguredMapTilerApiKey(),
+            ),
             center: Config.map.initialCenter,
             zoom: Config.map.initialZoom,
             interactive: Config.map.interactive,
@@ -106,7 +116,10 @@ export class MapService {
 
                 this.map.setStyle(style);
             } else {
-                this.map.setStyle(Config.map.styleUrls[mapStyle]);
+                this.map.setStyle(buildLocalStyle(
+                    mapStyle,
+                    getConfiguredMapTilerApiKey(),
+                ));
             }
 
             if (request === this.styleRequest) {
@@ -124,7 +137,7 @@ export class MapService {
         }
     }
 
-    public get instance(): maplibregl.Map {
+    public get instance(): MapLibreMap {
         return this.map;
     }
 }

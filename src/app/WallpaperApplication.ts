@@ -35,7 +35,7 @@ export class WallpaperApplication {
         (error) => this.showError(error),
     );
     private readonly settingsClient = new SettingsClient({
-        url: Config.settings.webSocketUrl,
+        url: Config.settings.wallpaperWebSocketUrl,
         role: "wallpaper",
         onSettings: (settings) => this.applySettings(settings),
         onError: (message) => console.warn("Settings host:", message),

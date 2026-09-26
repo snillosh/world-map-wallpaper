@@ -1,5 +1,5 @@
-import type { Continent } from "./City";
-import type { Country } from "./Country";
+import type { Continent } from "./City.js";
+import type { Country } from "./Country.js";
 
 export const behaviourModes = ["flight", "orbit", "explore"] as const;
 export type BehaviourModeKind = typeof behaviourModes[number];
