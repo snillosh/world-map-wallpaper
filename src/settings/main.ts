@@ -3,7 +3,7 @@ import "./settings.css";
 import { Config } from "../config/Config";
 import type {
     BehaviourModeKind,
-    CountryIso2,
+    DestinationCountryId,
     DestinationContinent,
     MapStyle,
     OrbitDirection,
@@ -18,6 +18,7 @@ import {
 import type { Country } from "../models/Country";
 import {
     filterCountryOptions,
+    getCountryDestinationId,
     loadCountryOptions,
 } from "../services/CountryCatalog";
 import { SearchableSelect } from "./SearchableSelect";
@@ -64,7 +65,7 @@ const client = new SettingsClient({
     },
 });
 
-const countrySelect = new SearchableSelect<CountryIso2 | null>(
+const countrySelect = new SearchableSelect<DestinationCountryId | null>(
     countryContainer,
     defaultWallpaperSettings.destinations.countryIso2,
     {
@@ -284,13 +285,13 @@ function renderSettings(settings: WallpaperSettings): void {
 
 function renderCountryOptions(
     continent: DestinationContinent | null,
-    selectedCountry: CountryIso2 | null,
+    selectedCountry: DestinationCountryId | null,
 ): void {
     const availableCountries = filterCountryOptions(countries, continent);
     countrySelect.setOptions([
         { value: null, label: "All Countries" },
         ...availableCountries.map((country) => ({
-            value: country.iso2,
+            value: getCountryDestinationId(country),
             label: country.name,
         })),
     ]);

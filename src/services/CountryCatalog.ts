@@ -26,3 +26,7 @@ export function filterCountryOptions(
 
     return countries.filter((country) => country.continent === continent);
 }
+
+export function getCountryDestinationId(country: Country): string {
+    return country.destinationId ?? country.iso2;
+}

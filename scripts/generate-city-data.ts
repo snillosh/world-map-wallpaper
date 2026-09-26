@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 
 import type { City } from "../src/models/City";
+import type { Country } from "../src/models/Country";
 import {
     defaultCurationConfig,
     isUsefulCandidate,
@@ -17,6 +18,16 @@ const sourcePath = resolve(process.cwd(), "cities500.txt");
 const outputPath = resolve(process.cwd(), "cities.json");
 const countriesOutputPath = resolve(process.cwd(), "countries.json");
 const metadataPath = resolve(process.cwd(), "cities.metadata.json");
+
+const ukHomeNations = [
+    { destinationId: "GB-ENG", admin1Code: "ENG", name: "England" },
+    { destinationId: "GB-NIR", admin1Code: "NIR", name: "Northern Ireland" },
+    { destinationId: "GB-SCT", admin1Code: "SCT", name: "Scotland" },
+    { destinationId: "GB-WLS", admin1Code: "WLS", name: "Wales" },
+] as const;
+const ukHomeNationAdminCodes: ReadonlySet<string> = new Set(
+    ukHomeNations.map((nation) => nation.admin1Code),
+);
 
 const candidatesByCountry = new Map<string, City[]>();
 const missingCountryCodes = new Set<string>();
@@ -64,13 +75,23 @@ if (missingCountryCodes.size > 0) {
     );
 }
 
-const selectedByCountry = new Map<string, City[]>();
+const selectedByCurationGroup = new Map<string, City[]>();
 const selectedCities: City[] = [];
 
 for (const [countryCode, candidates] of candidatesByCountry) {
-    const selected = selectCitiesForCountry(candidates);
-    selectedByCountry.set(countryCode, selected);
-    selectedCities.push(...selected);
+    const curationGroups = new Map<string, City[]>();
+    for (const city of candidates) {
+        const groupId = getCurationGroupId(countryCode, city.admin1Code);
+        const group = curationGroups.get(groupId) ?? [];
+        group.push(city);
+        curationGroups.set(groupId, group);
+    }
+
+    for (const [groupId, groupCandidates] of curationGroups) {
+        const selected = selectCitiesForCountry(groupCandidates);
+        selectedByCurationGroup.set(groupId, selected);
+        selectedCities.push(...selected);
+    }
 }
 
 selectedCities.sort((left, right) => {
@@ -84,10 +105,27 @@ selectedCities.sort((left, right) => {
     return left.id - right.id;
 });
 
-const selectedCountries = [...selectedByCountry.keys()]
+const selectedCountries: Country[] = [...candidatesByCountry.keys()]
     .map((countryCode) => getCountryMetadata(countryCode))
     .filter((country) => country !== undefined)
-    .sort((left, right) => left.name.localeCompare(right.name));
+    .map((country) => ({ ...country }));
+
+const unitedKingdom = getCountryMetadata("GB");
+if (unitedKingdom !== undefined) {
+    for (const nation of ukHomeNations) {
+        if (selectedByCurationGroup.has(nation.destinationId)) {
+            selectedCountries.push({
+                iso2: unitedKingdom.iso2,
+                name: nation.name,
+                continent: unitedKingdom.continent,
+                destinationId: nation.destinationId,
+                admin1Code: nation.admin1Code,
+            });
+        }
+    }
+}
+
+selectedCountries.sort((left, right) => left.name.localeCompare(right.name));
 
 const metadata = {
     generatedAt: new Date().toISOString(),
@@ -100,7 +138,9 @@ const metadata = {
     validPopulatedPlaceCount,
     usefulCandidateCount,
     selectedCityCount: selectedCities.length,
-    countryCount: selectedByCountry.size,
+    countryCount: candidatesByCountry.size,
+    destinationCount: selectedCountries.length,
+    curationGroupCount: selectedByCurationGroup.size,
     maximumPerCountry: defaultCurationConfig.maximumPerCountry,
 };
 
@@ -116,7 +156,8 @@ console.log(`GeoNames records read:       ${sourceRecordCount.toLocaleString()}`
 console.log(`Valid populated places:     ${validPopulatedPlaceCount.toLocaleString()}`);
 console.log(`Malformed records skipped:  ${malformedRecordCount.toLocaleString()}`);
 console.log(`Useful curation candidates: ${usefulCandidateCount.toLocaleString()}`);
-console.log(`Countries represented:      ${selectedByCountry.size.toLocaleString()}`);
+console.log(`Countries represented:      ${candidatesByCountry.size.toLocaleString()}`);
+console.log(`Destination options:        ${selectedCountries.length.toLocaleString()}`);
 console.log(`Cities selected:            ${selectedCities.length.toLocaleString()}`);
 console.log(
     `Cities discarded:           ${(sourceRecordCount - selectedCities.length).toLocaleString()}`,
@@ -125,7 +166,7 @@ console.log(
 console.log("\nSelection examples:");
 for (const countryCode of ["GB", "IN", "CN", "US", "FR", "AU"]) {
     const candidates = candidatesByCountry.get(countryCode) ?? [];
-    const selected = selectedByCountry.get(countryCode) ?? [];
+    const selected = selectedCities.filter((city) => city.iso2 === countryCode);
     const countryName = getCountryMetadata(countryCode)?.name ?? countryCode;
     console.log(
         `${countryName.padEnd(20)} ${selected.length.toLocaleString().padStart(3)} / ` +
@@ -133,6 +174,25 @@ for (const countryCode of ["GB", "IN", "CN", "US", "FR", "AU"]) {
     );
 }
 
+console.log("\nUnited Kingdom home nations:");
+for (const nation of ukHomeNations) {
+    const candidates = candidatesByCountry.get("GB")?.filter(
+        (city) => city.admin1Code === nation.admin1Code,
+    ) ?? [];
+    const selected = selectedByCurationGroup.get(nation.destinationId) ?? [];
+    console.log(
+        `${nation.name.padEnd(20)} ${selected.length.toLocaleString().padStart(3)} / ` +
+        `${candidates.length.toLocaleString()} candidates`,
+    );
+}
+
 console.log(`\nWrote ${outputPath}`);
 console.log(`Wrote ${countriesOutputPath}`);
 console.log(`Wrote ${metadataPath}`);
+
+function getCurationGroupId(countryIso2: string, admin1Code: string): string {
+    if (countryIso2 === "GB" && ukHomeNationAdminCodes.has(admin1Code)) {
+        return `${countryIso2}-${admin1Code}`;
+    }
+    return countryIso2;
+}

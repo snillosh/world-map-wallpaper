@@ -13,7 +13,7 @@ body,
 #route-label {
   position: fixed;
   left: 24px;
-  bottom: 24px;
+  bottom: 42px;
   z-index: 10;
 
   padding: 10px 14px;
@@ -35,7 +35,49 @@ body,
   visibility: hidden;
 }
 
-.maplibregl-ctrl-bottom-left,
-.maplibregl-ctrl-bottom-right {
+#map-error {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 20;
+  max-width: min(520px, calc(100vw - 36px));
+  padding: 11px 14px;
+  border: 1px solid rgb(255 171 96 / 55%);
+  border-radius: 10px;
+  background: rgb(28 13 8 / 88%);
+  color: #ffe7d1;
+  font: 14px/1.45 system-ui, sans-serif;
+  box-shadow: 0 10px 35px rgb(0 0 0 / 28%);
+  backdrop-filter: blur(8px);
+}
+
+#map-error[hidden] {
   display: none;
+}
+
+#maptiler-logo {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 10;
+  display: block;
+  height: 20px;
+  opacity: 0.68;
+}
+
+#maptiler-logo img {
+  display: block;
+  width: auto;
+  height: 20px;
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgb(5 7 10 / 62%) !important;
+  color: rgb(233 237 239 / 76%);
+  font-family: system-ui, sans-serif;
+  opacity: 0.72;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: inherit;
 }

@@ -12,8 +12,10 @@ import { RouteLabel } from "../ui/RouteLabel";
 
 export class WallpaperApplication {
     private readonly routeLabel = new RouteLabel();
+    private readonly errorNotice = requireElement("map-error");
     private readonly mapService = new MapService(
         defaultWallpaperSettings.visual.mapStyle,
+        (error) => this.showMapError(error),
     );
     private readonly cityService = new CityService();
     private readonly modeController = new ModeController(
@@ -66,7 +68,10 @@ export class WallpaperApplication {
     private applySettings(settings: WallpaperSettings): void {
         const previousMode = this.settings.behaviourMode;
         this.settings = settings;
-        this.mapService.setStyle(settings.visual.mapStyle);
+        void this.mapService
+            .setStyle(settings.visual.mapStyle)
+            .then(() => this.clearError())
+            .catch((error: unknown) => this.showMapError(error));
 
         if (!this.ready) {
             return;
@@ -80,10 +85,32 @@ export class WallpaperApplication {
     }
 
     private showError(error: unknown): void {
-        console.error(error);
+        const message = error instanceof Error
+            ? error.message
+            : "Something went wrong.";
+        this.showMapError(error);
         this.routeLabel.setVisible(true);
-        this.routeLabel.setError(
-            error instanceof Error ? error.message : "Something went wrong.",
-        );
+        this.routeLabel.setError(message);
     }
+
+    private showMapError(error: unknown): void {
+        console.error(error);
+        this.errorNotice.textContent = error instanceof Error
+            ? error.message
+            : "Something went wrong.";
+        this.errorNotice.hidden = false;
+    }
+
+    private clearError(): void {
+        this.errorNotice.hidden = true;
+        this.errorNotice.textContent = "";
+    }
+}
+
+function requireElement(id: string): HTMLElement {
+    const element = document.getElementById(id);
+    if (element === null) {
+        throw new Error(`Missing #${id} element.`);
+    }
+    return element;
 }

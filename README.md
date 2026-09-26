@@ -28,8 +28,47 @@ file `wallpaper-settings.json`.
 
 The control panel keeps behaviour and appearance separate. Flight, Orbit, and
 Explore are behaviour modes; Night, Night + Urban Density, Muted Orange, and
-Classic are map styles that work with every behaviour. Each mode retains its
-own settings when you switch between them.
+Classic are map styles that work with every behaviour. Satellite Light,
+Satellite Dark, Satellite Hybrid Light, and Satellite Hybrid Dark are also
+available when a MapTiler key is configured. Each mode retains its own settings
+when you switch between them.
+
+## MapTiler satellite styles
+
+Create a browser API key in your
+[MapTiler Cloud account](https://cloud.maptiler.com/account/keys/), copy
+`.env.example` to `.env`, and set:
+
+```dotenv
+VITE_MAPTILER_API_KEY=your-browser-key
+```
+
+Restart the development server after changing `.env`. Vite intentionally sends
+`VITE_` values to the browser, which is expected for a browser map key; restrict
+the key to the wallpaper's production URL and local development origins in
+MapTiler Cloud. The local `.env` file is ignored by Git and must not be
+committed.
+
+The four satellite styles use MapTiler's current Satellite v4 and Hybrid v4
+light/dark treatments, then replace their navigation overlays with a small
+wallpaper-specific set:
+
+- **Satellite Light / Dark** — completely plain imagery with no labels or
+  borders.
+- **Satellite Hybrid Light / Dark** — the same imagery-led presentation with
+  state, village, island, inland-water, and regional-border context.
+
+None of the satellite styles include roads, street names, POIs, transit layers,
+or the Night theme's city glow. They use MapTiler Planet v4 for labels and
+borders and MapTiler Terrain RGB v2 for restrained 3D terrain. Satellite imagery
+is delivered by MapTiler's provider styles. TileJSON's normal browser cache is
+left enabled; the wallpaper adds no extra reload or animation loop.
+
+MapLibre's compact attribution control remains visible so credits supplied by
+MapTiler's imagery and data sources are shown. The MapTiler logo is also kept on
+screen for free-plan compliance. See MapTiler's
+[attribution guidance](https://docs.maptiler.com/guides/map-design/attribution/add-attribution/)
+for plan-specific requirements.
 
 Explore behaves like a calm map observer: it zooms into a place, pauses, zooms
 straight back out, and only then moves geographically toward its next mostly
@@ -38,8 +77,14 @@ time.
 
 Flight and Explore destinations share Continent and searchable Country
 constraints. Countries come from the generated data and are persisted
-internally by ISO2 code; changing the selection takes effect after the current
-flight or Explore inspection finishes.
+internally by a stable ISO-derived destination code; changing the selection
+takes effect after the current flight or Explore inspection finishes.
+
+The Europe country list also exposes England, Northern Ireland, Scotland, and
+Wales individually while retaining United Kingdom as the combined option. The
+home nations use their real `GB` country code plus GeoNames administrative
+codes, and each is curated independently up to the same 250-location ceiling
+as other destinations.
 
 Run the mode lifecycle tests with:
 

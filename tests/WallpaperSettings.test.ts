@@ -11,6 +11,13 @@ import {
 const countries: readonly Country[] = [
     { iso2: "FR", name: "France", continent: "Europe" },
     { iso2: "JP", name: "Japan", continent: "Asia" },
+    {
+        iso2: "GB",
+        name: "Scotland",
+        continent: "Europe",
+        destinationId: "GB-SCT",
+        admin1Code: "SCT",
+    },
 ];
 
 test("migrates Flight-owned destination settings into shared destinations", () => {
@@ -96,4 +103,13 @@ test("accepts the extended Explore zoom ranges", () => {
 
     assert.equal(restored.explore.zoomedOutLevel, 8);
     assert.equal(restored.explore.zoomedInLevel, 16);
+});
+
+test("restores and normalizes a UK home-nation destination", () => {
+    const restored = migrateStoredSettings({
+        destinations: { continent: "Europe", countryIso2: "GB-SCT" },
+    });
+    const normalized = normalizeDestinationSettings(restored, countries);
+
+    assert.equal(normalized.destinations.countryIso2, "GB-SCT");
 });

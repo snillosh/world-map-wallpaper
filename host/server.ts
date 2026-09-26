@@ -24,7 +24,7 @@ const settingsPath = resolve(process.cwd(), "wallpaper-settings.json");
 const temporarySettingsPath = `${settingsPath}.tmp`;
 const countriesPath = resolve(process.cwd(), "countries.json");
 
-const countries = await loadCountries();
+let countries = await loadCountries();
 let settings = await loadSettings();
 let settingsUpdateQueue = Promise.resolve();
 
@@ -114,6 +114,10 @@ async function enqueueSettingsUpdate(
     patch: WallpaperSettingsPatch,
 ): Promise<void> {
     const update = settingsUpdateQueue.then(async () => {
+        // The development settings UI can pick up a regenerated catalogue via
+        // Vite without restarting this process. Refresh here as well so a new
+        // destination is not incorrectly normalised back to All Countries.
+        countries = await loadCountries();
         settings = normalizeDestinationSettings(
             validateSettings(mergeSettings(settings, patch)),
             countries,

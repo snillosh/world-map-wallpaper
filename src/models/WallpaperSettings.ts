@@ -9,6 +9,10 @@ export const mapStyles = [
     "night-density",
     "muted-orange",
     "classic",
+    "satellite-light",
+    "satellite-dark",
+    "satellite-hybrid-light",
+    "satellite-hybrid-dark",
 ] as const;
 export type MapStyle = typeof mapStyles[number];
 
@@ -18,7 +22,7 @@ export type TargetFps = typeof targetFpsOptions[number];
 export const orbitDirections = ["east", "west"] as const;
 export type OrbitDirection = typeof orbitDirections[number];
 
-export type CountryIso2 = string;
+export type DestinationCountryId = string;
 
 export const destinationContinents = [
     "Africa",
@@ -40,7 +44,9 @@ export interface PerformanceSettings {
 
 export interface DestinationSettings {
     readonly continent: DestinationContinent | null;
-    readonly countryIso2: CountryIso2 | null;
+    // The property name is retained for saved-settings compatibility. Values
+    // can also be ISO 3166-2-style destination IDs such as GB-SCT.
+    readonly countryIso2: DestinationCountryId | null;
 }
 
 export interface FlightSettings {
@@ -298,7 +304,10 @@ export function normalizeDestinationSettings(
         return settings;
     }
 
-    const country = countries.find((candidate) => candidate.iso2 === countryIso2);
+    const country = countries.find(
+        (candidate) =>
+            (candidate.destinationId ?? candidate.iso2) === countryIso2,
+    );
     const countryIsCompatible = country !== undefined &&
         (
             settings.destinations.continent === null ||
@@ -359,11 +368,13 @@ function validateDestinationPatch(value: unknown): Partial<DestinationSettings> 
             patch.countryIso2 = null;
         } else if (
             typeof destinations.countryIso2 === "string" &&
-            /^[A-Z]{2}$/.test(destinations.countryIso2)
+            /^[A-Z]{2}(?:-[A-Z0-9]{1,3})?$/.test(destinations.countryIso2)
         ) {
             patch.countryIso2 = destinations.countryIso2;
         } else {
-            throw new Error("Country must be an uppercase ISO2 code or null.");
+            throw new Error(
+                "Country must be an uppercase ISO2 or destination region code.",
+            );
         }
     }
 

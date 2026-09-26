@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T21:13:39.219Z",
+  "generatedAt": "2026-09-26T07:32:04.712Z",
   "source": "GeoNames",
   "sourceDataset": "cities500",
   "sourceUrl": "https://download.geonames.org/export/dump/",
@@ -8,7 +8,9 @@
   "sourceRecordCount": 235878,
   "validPopulatedPlaceCount": 235878,
   "usefulCandidateCount": 74317,
-  "selectedCityCount": 23123,
+  "selectedCityCount": 23480,
   "countryCount": 245,
+  "destinationCount": 249,
+  "curationGroupCount": 249,
   "maximumPerCountry": 250
 }

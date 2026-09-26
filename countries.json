@@ -325,6 +325,13 @@
     "continent": "North America"
   },
   {
+    "iso2": "GB",
+    "name": "England",
+    "continent": "Europe",
+    "destinationId": "GB-ENG",
+    "admin1Code": "ENG"
+  },
+  {
     "iso2": "GQ",
     "name": "Equatorial Guinea",
     "continent": "Africa"
@@ -805,6 +812,13 @@
     "continent": "Europe"
   },
   {
+    "iso2": "GB",
+    "name": "Northern Ireland",
+    "continent": "Europe",
+    "destinationId": "GB-NIR",
+    "admin1Code": "NIR"
+  },
+  {
     "iso2": "MP",
     "name": "Northern Mariana Islands",
     "continent": "Oceania"
@@ -923,6 +937,13 @@
     "iso2": "SA",
     "name": "Saudi Arabia",
     "continent": "Asia"
+  },
+  {
+    "iso2": "GB",
+    "name": "Scotland",
+    "continent": "Europe",
+    "destinationId": "GB-SCT",
+    "admin1Code": "SCT"
   },
   {
     "iso2": "SN",
@@ -1198,6 +1219,13 @@
     "iso2": "VN",
     "name": "Vietnam",
     "continent": "Asia"
+  },
+  {
+    "iso2": "GB",
+    "name": "Wales",
+    "continent": "Europe",
+    "destinationId": "GB-WLS",
+    "admin1Code": "WLS"
   },
   {
     "iso2": "WF",
